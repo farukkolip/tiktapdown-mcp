@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
+import express from "express";
 
 // ============================================================
 //  DATA
@@ -489,16 +491,43 @@ server.tool(
 );
 
 // ============================================================
-//  START
+//  START — stdio (local) or HTTP (Railway/remote)
 // ============================================================
 
-async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("TikTapDown MCP Server running on stdio");
-}
+const isHttp = process.env.PORT !== undefined;
 
-main().catch((err) => {
-  console.error("Fatal error:", err);
-  process.exit(1);
-});
+if (isHttp) {
+  // HTTP mode for Railway / Smithery
+  const app = express();
+  app.use(express.json());
+
+  app.post("/mcp", async (req, res) => {
+    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+    res.on("close", () => transport.close());
+    await server.connect(transport);
+    await transport.handleRequest(req, res, req.body);
+  });
+
+  app.get("/mcp", async (req, res) => {
+    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+    res.on("close", () => transport.close());
+    await server.connect(transport);
+    await transport.handleRequest(req, res);
+  });
+
+  app.get("/", (_req, res) => {
+    res.json({ name: "tiktapdown-mcp", version: "1.0.0", status: "ok" });
+  });
+
+  const port = Number(process.env.PORT) || 3000;
+  app.listen(port, () => {
+    console.log(`TikTapDown MCP Server running on HTTP port ${port}`);
+  });
+} else {
+  // Stdio mode for local Claude Desktop / npx
+  (async () => {
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    console.error("TikTapDown MCP Server running on stdio");
+  })().catch((err) => { console.error(err); process.exit(1); });
+}

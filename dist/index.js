@@ -1,9 +1,14 @@
 #!/usr/bin/env node
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mcp_js_1 = require("@modelcontextprotocol/sdk/server/mcp.js");
 const stdio_js_1 = require("@modelcontextprotocol/sdk/server/stdio.js");
+const streamableHttp_js_1 = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
 const zod_1 = require("zod");
+const express_1 = __importDefault(require("express"));
 // ============================================================
 //  DATA
 // ============================================================
@@ -428,14 +433,38 @@ server.tool("generate_tiktok_hook", "Generate proven viral TikTok hook formulas 
     return { content: [{ type: "text", text: result }] };
 });
 // ============================================================
-//  START
+//  START — stdio (local) or HTTP (Railway/remote)
 // ============================================================
-async function main() {
-    const transport = new stdio_js_1.StdioServerTransport();
-    await server.connect(transport);
-    console.error("TikTapDown MCP Server running on stdio");
+const isHttp = process.env.PORT !== undefined;
+if (isHttp) {
+    // HTTP mode for Railway / Smithery
+    const app = (0, express_1.default)();
+    app.use(express_1.default.json());
+    app.post("/mcp", async (req, res) => {
+        const transport = new streamableHttp_js_1.StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+        res.on("close", () => transport.close());
+        await server.connect(transport);
+        await transport.handleRequest(req, res, req.body);
+    });
+    app.get("/mcp", async (req, res) => {
+        const transport = new streamableHttp_js_1.StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+        res.on("close", () => transport.close());
+        await server.connect(transport);
+        await transport.handleRequest(req, res);
+    });
+    app.get("/", (_req, res) => {
+        res.json({ name: "tiktapdown-mcp", version: "1.0.0", status: "ok" });
+    });
+    const port = Number(process.env.PORT) || 3000;
+    app.listen(port, () => {
+        console.log(`TikTapDown MCP Server running on HTTP port ${port}`);
+    });
 }
-main().catch((err) => {
-    console.error("Fatal error:", err);
-    process.exit(1);
-});
+else {
+    // Stdio mode for local Claude Desktop / npx
+    (async () => {
+        const transport = new stdio_js_1.StdioServerTransport();
+        await server.connect(transport);
+        console.error("TikTapDown MCP Server running on stdio");
+    })().catch((err) => { console.error(err); process.exit(1); });
+}
