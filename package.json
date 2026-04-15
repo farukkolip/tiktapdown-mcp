@@ -1,0 +1,26 @@
+{
+  "name": "tiktapdown-mcp",
+  "version": "1.0.0",
+  "description": "TikTapDown MCP Server — Download TikTok videos, get hashtags, best posting times & viral hooks",
+  "main": "dist/index.js",
+  "bin": {
+    "tiktapdown-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.10.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0",
+    "ts-node": "^10.9.2"
+  },
+  "files": ["dist"],
+  "keywords": ["mcp", "tiktok", "tiktapdown", "hashtags", "downloader", "model-context-protocol"],
+  "license": "MIT"
+}
