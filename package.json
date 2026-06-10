@@ -27,11 +27,34 @@
   ],
   "keywords": [
     "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "claude",
+    "claude-desktop",
+    "anthropic",
+    "cursor",
+    "windsurf",
     "tiktok",
+    "tiktok-downloader",
+    "tiktok-video-downloader",
+    "tiktok-mcp",
     "tiktapdown",
     "hashtags",
-    "downloader",
-    "model-context-protocol"
+    "social-media",
+    "creator-tools",
+    "no-watermark",
+    "hooks",
+    "viral-hooks",
+    "best-time-to-post"
   ],
+  "homepage": "https://tiktapdown.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/farukkolip/tiktapdown-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/farukkolip/tiktapdown-mcp/issues"
+  },
+  "author": "farukkolip",
   "license": "MIT"
 }
