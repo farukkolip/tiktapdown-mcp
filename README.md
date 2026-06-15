@@ -4,6 +4,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/tiktapdown-mcp.svg)](https://www.npmjs.com/package/tiktapdown-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![MCP](https://img.shields.io/badge/MCP-1.10+-blue.svg)](https://modelcontextprotocol.io/)
+[![Glama Score](https://glama.ai/mcp/servers/farukkolip/tiktapdown-mcp/badges/score.svg)](https://glama.ai/mcp/servers/farukkolip/tiktapdown-mcp)
 
 Give Claude, Cursor, Windsurf and any MCP-compatible AI assistant the power to **download TikTok videos**, find **viral hashtags by niche**, get **best posting times by country**, and generate **hook formulas** — all in one MCP server. Free, no API keys required.
 
