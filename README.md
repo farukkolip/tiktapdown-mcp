@@ -132,6 +132,18 @@ Curiosity · Contrarian · Listicle · How-To · Story · Question · Stat-Drop 
 - **npm**: [npmjs.com/package/tiktapdown-mcp](https://www.npmjs.com/package/tiktapdown-mcp)
 - **MCP spec**: [modelcontextprotocol.io](https://modelcontextprotocol.io)
 
+## Part of the Tapdown family
+
+TikTapDown is the first tool in a family of focused creator utilities, one platform at a time.
+
+- 🎵 **TikTapDown** (TikTok) — live
+- 📷 Instapdown (Instagram) — coming
+- 🐦 XTapdown (X) — coming
+- 📺 YouTapDown (YouTube) — coming
+- 📌 PinTapdown (Pinterest) — coming
+
+Each tool: simple, free, no fluff. Follow the build at [@tapdown_](https://x.com/tapdown_) on X or [u/tapdown_](https://www.reddit.com/user/tapdown_/) on Reddit.
+
 ## License
 
 MIT — built by [farukkolip](https://github.com/farukkolip). Web companion: [tiktapdown.com](https://tiktapdown.com)

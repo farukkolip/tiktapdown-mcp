@@ -1,7 +1,8 @@
 {
   "name": "tiktapdown-mcp",
-  "version": "1.0.0",
-  "description": "TikTapDown MCP Server — Download TikTok videos, get hashtags, best posting times & viral hooks",
+  "version": "1.0.1",
+  "mcpName": "io.github.farukkolip/tiktapdown-mcp",
+  "description": "TikTapDown MCP Server — Download TikTok videos, get hashtags, best posting times & viral hooks. Part of the Tapdown family of creator tools.",
   "main": "dist/index.js",
   "bin": {
     "tiktapdown-mcp": "dist/index.js"
