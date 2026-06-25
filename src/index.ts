@@ -491,6 +491,356 @@ server.tool(
 );
 
 // ============================================================
+//  DATA: RPM (per niche, USD per 1000 views, US baseline)
+// ============================================================
+
+const RPM_NICHES: Record<string, { label: string; rpmMin: number; rpmMax: number; why: string }> = {
+  finance:    { label: "Finance & Investing",      rpmMin: 4.00, rpmMax: 8.50, why: "High-intent audience making financial decisions. Advertisers pay premium." },
+  business:   { label: "Business & Entrepreneurship", rpmMin: 3.50, rpmMax: 6.50, why: "B2B and SaaS advertisers have large budgets in this niche." },
+  realestate: { label: "Real Estate",              rpmMin: 3.00, rpmMax: 6.00, why: "Single transactions involve large sums. Advertisers pay top dollar." },
+  tech:       { label: "Tech & Software",          rpmMin: 2.50, rpmMax: 5.00, why: "Software and SaaS companies compete aggressively for tech-savvy audiences." },
+  education:  { label: "Education & eLearning",    rpmMin: 2.50, rpmMax: 5.00, why: "Course platforms and tutoring services are big spenders." },
+  health:     { label: "Health & Wellness",        rpmMin: 2.00, rpmMax: 4.00, why: "Supplement, insurance, and wellness brand budgets are large." },
+  beauty:     { label: "Beauty & Skincare",        rpmMin: 1.50, rpmMax: 3.50, why: "Massive advertiser competition from beauty brands." },
+  fitness:    { label: "Fitness & Sports",         rpmMin: 1.50, rpmMax: 3.00, why: "Gym equipment, nutrition, and apparel brands keep demand solid." },
+  food:       { label: "Food & Cooking",           rpmMin: 1.50, rpmMax: 3.00, why: "Food delivery and CPG brand advertising keeps RPM healthy." },
+  travel:     { label: "Travel & Adventure",       rpmMin: 1.50, rpmMax: 3.00, why: "Travel bookings are high-value. Airlines and hotels pay well." },
+  fashion:    { label: "Fashion & Lifestyle",      rpmMin: 1.00, rpmMax: 2.50, why: "Large audience but diluted by fast fashion." },
+  diy:        { label: "DIY & Home Decor",         rpmMin: 1.00, rpmMax: 2.50, why: "Home improvement advertisers have seasonal spikes." },
+  gaming:     { label: "Gaming",                   rpmMin: 0.80, rpmMax: 2.00, why: "Large audience but advertiser CPMs are lower for entertainment-first content." },
+  comedy:     { label: "Comedy & Entertainment",   rpmMin: 0.80, rpmMax: 1.80, why: "Huge reach but broad targeting lowers per-view value." },
+  music:      { label: "Music & Dance",            rpmMin: 0.70, rpmMax: 1.80, why: "Younger demographic with lower purchasing power." },
+  pets:       { label: "Pets & Animals",           rpmMin: 0.80, rpmMax: 2.00, why: "Pet product companies growing but mid CPM." },
+};
+
+const RPM_COUNTRIES: Record<string, { name: string; multiplier: number }> = {
+  US: { name: "United States 🇺🇸", multiplier: 1.00 },
+  GB: { name: "United Kingdom 🇬🇧", multiplier: 0.85 },
+  AU: { name: "Australia 🇦🇺",      multiplier: 0.80 },
+  CA: { name: "Canada 🇨🇦",         multiplier: 0.80 },
+  DE: { name: "Germany 🇩🇪",        multiplier: 0.70 },
+  NL: { name: "Netherlands 🇳🇱",    multiplier: 0.65 },
+  FR: { name: "France 🇫🇷",         multiplier: 0.65 },
+  SE: { name: "Sweden 🇸🇪",         multiplier: 0.60 },
+  IT: { name: "Italy 🇮🇹",          multiplier: 0.55 },
+  ES: { name: "Spain 🇪🇸",          multiplier: 0.50 },
+  JP: { name: "Japan 🇯🇵",          multiplier: 0.50 },
+  AE: { name: "UAE 🇦🇪",            multiplier: 0.40 },
+  SA: { name: "Saudi Arabia 🇸🇦",   multiplier: 0.35 },
+  MX: { name: "Mexico 🇲🇽",         multiplier: 0.30 },
+  BR: { name: "Brazil 🇧🇷",         multiplier: 0.25 },
+  TR: { name: "Turkey 🇹🇷",         multiplier: 0.20 },
+};
+
+// ============================================================
+//  DATA: Unicode font maps (TikTok bio / caption styling)
+// ============================================================
+
+function convertFont(text: string, style: string): string {
+  const maps: Record<string, { upper: string; lower: string; digits: string }> = {
+    bold:           { upper: "𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙", lower: "𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳", digits: "𝟎𝟏𝟐𝟑𝟒𝟓𝟔𝟕𝟖𝟗" },
+    italic:         { upper: "𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍", lower: "𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧", digits: "0123456789" },
+    boldItalic:     { upper: "𝑨𝑩𝑪𝑫𝑬𝑭𝑮𝑯𝑰𝑱𝑲𝑳𝑴𝑵𝑶𝑷𝑸𝑹𝑺𝑻𝑼𝑽𝑾𝑿𝒀𝒁", lower: "𝒂𝒃𝒄𝒅𝒆𝒇𝒈𝒉𝒊𝒋𝒌𝒍𝒎𝒏𝒐𝒑𝒒𝒓𝒔𝒕𝒖𝒗𝒘𝒙𝒚𝒛", digits: "0123456789" },
+    cursive:        { upper: "𝒜ℬ𝒞𝒟ℰℱ𝒢ℋℐ𝒥𝒦ℒℳ𝒩𝒪𝒫𝒬ℛ𝒮𝒯𝒰𝒱𝒲𝒳𝒴𝒵", lower: "𝒶𝒷𝒸𝒹ℯ𝒻ℊ𝒽𝒾𝒿𝓀𝓁𝓂𝓃ℴ𝓅𝓆𝓇𝓈𝓉𝓊𝓋𝓌𝓍𝓎𝓏", digits: "0123456789" },
+    monospace:      { upper: "𝙰𝙱𝙲𝙳𝙴𝙵𝙶𝙷𝙸𝙹𝙺𝙻𝙼𝙽𝙾𝙿𝚀𝚁𝚂𝚃𝚄𝚅𝚆𝚇𝚈𝚉", lower: "𝚊𝚋𝚌𝚍𝚎𝚏𝚐𝚑𝚒𝚓𝚔𝚕𝚖𝚗𝚘𝚙𝚚𝚛𝚜𝚝𝚞𝚟𝚠𝚡𝚢𝚣", digits: "𝟶𝟷𝟸𝟹𝟺𝟻𝟼𝟽𝟾𝟿" },
+    doubleStruck:   { upper: "𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ", lower: "𝕒𝕓𝕔𝕕𝕖𝕗𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝕧𝕨𝕩𝕪𝕫", digits: "𝟘𝟙𝟚𝟛𝟜𝟝𝟞𝟟𝟠𝟡" },
+    fraktur:        { upper: "𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℜ𝔖𝔗𝔘𝔙𝔚𝔛𝔜ℨ", lower: "𝔞𝔟𝔠𝔡𝔢𝔣𝔤𝔥𝔦𝔧𝔨𝔩𝔪𝔫𝔬𝔭𝔮𝔯𝔰𝔱𝔲𝔳𝔴𝔵𝔶𝔷", digits: "0123456789" },
+  };
+  const m = maps[style];
+  if (!m) return text;
+  const ascii = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const asciiLow = "abcdefghijklmnopqrstuvwxyz";
+  const asciiDig = "0123456789";
+  const arr = Array.from(text);
+  return arr.map(ch => {
+    const u = ascii.indexOf(ch);
+    if (u !== -1) return Array.from(m.upper)[u] ?? ch;
+    const l = asciiLow.indexOf(ch);
+    if (l !== -1) return Array.from(m.lower)[l] ?? ch;
+    const d = asciiDig.indexOf(ch);
+    if (d !== -1) return Array.from(m.digits)[d] ?? ch;
+    return ch;
+  }).join("");
+}
+
+// ============================================================
+//  TOOL 5: Extract TikTok Audio (MP3)
+// ============================================================
+
+server.tool(
+  "extract_tiktok_audio_mp3",
+  "Extract the audio (MP3) from a TikTok video. Returns the original sound title, artist, and a direct audio download link useful for sound discovery, music analysis, and trend research.",
+  {
+    url: z.string().describe("The TikTok video URL"),
+  },
+  async ({ url }) => {
+    if (!url.includes("tiktok.com") && !url.includes("vm.tiktok.com")) {
+      return { content: [{ type: "text", text: "❌ Invalid URL. Provide a valid TikTok video link." }] };
+    }
+    try {
+      const formData = new URLSearchParams();
+      formData.append("url", url);
+      formData.append("hd", "1");
+      const res = await fetch("https://www.tikwm.com/api/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+        },
+        body: formData.toString(),
+      });
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      const data = await res.json() as { code: number; msg?: string; data?: { music: string; music_info: { title: string; author: string; original: boolean; duration: number } } };
+      if (data.code !== 0 || !data.data) {
+        return { content: [{ type: "text", text: `❌ Could not extract audio: ${data.msg ?? "Unknown error"}` }] };
+      }
+      const m = data.data.music_info;
+      const result = [
+        `🎵 TikTok Audio Extracted via TikTapDown`,
+        ``,
+        `Title: ${m.title}`,
+        `Artist: ${m.author}`,
+        `Duration: ${m.duration}s`,
+        `Original Sound: ${m.original ? "Yes (creator-made)" : "No (existing track)"}`,
+        ``,
+        `⬇️ MP3 Download: ${data.data.music}`,
+        ``,
+        `🔗 Audio extractor in browser: https://tiktapdown.com/tiktok-to-mp3`,
+      ].join("\n");
+      return { content: [{ type: "text", text: result }] };
+    } catch (err) {
+      return { content: [{ type: "text", text: `❌ Network error: ${err instanceof Error ? err.message : "Unknown"}` }] };
+    }
+  }
+);
+
+// ============================================================
+//  TOOL 6: Calculate TikTok RPM (Revenue per 1000 views)
+// ============================================================
+
+server.tool(
+  "calculate_tiktok_rpm",
+  "Estimate TikTok Creator Rewards revenue for a given niche, audience country, and view count. Returns RPM range, per-video estimate, and monthly projection. Based on 2026 Creator Rewards benchmarks.",
+  {
+    niche: z.enum(["finance","business","realestate","tech","education","health","beauty","fitness","food","travel","fashion","diy","gaming","comedy","music","pets"]).describe("Content niche"),
+    country: z.enum(["US","GB","AU","CA","DE","NL","FR","SE","IT","ES","JP","AE","SA","MX","BR","TR"]).describe("Primary audience country"),
+    views: z.number().int().positive().describe("Total views per video (or campaign)"),
+    videosPerMonth: z.number().int().positive().optional().describe("Optional: videos per month for monthly projection"),
+  },
+  async ({ niche, country, views, videosPerMonth }) => {
+    const n = RPM_NICHES[niche];
+    const c = RPM_COUNTRIES[country];
+    if (!n || !c) return { content: [{ type: "text", text: "❌ Unknown niche or country." }] };
+    const rpmMin = n.rpmMin * c.multiplier;
+    const rpmMax = n.rpmMax * c.multiplier;
+    const perVideoMin = (views / 1000) * rpmMin;
+    const perVideoMax = (views / 1000) * rpmMax;
+    const lines = [
+      `💰 TikTok RPM Estimate — ${n.label} in ${c.name}`,
+      ``,
+      `RPM range: $${rpmMin.toFixed(2)} – $${rpmMax.toFixed(2)} per 1,000 views`,
+      `Per video (${views.toLocaleString()} views): $${perVideoMin.toFixed(2)} – $${perVideoMax.toFixed(2)}`,
+    ];
+    if (videosPerMonth) {
+      const monthlyMin = perVideoMin * videosPerMonth;
+      const monthlyMax = perVideoMax * videosPerMonth;
+      lines.push(`Monthly projection (${videosPerMonth} videos): $${monthlyMin.toFixed(0)} – $${monthlyMax.toFixed(0)}`);
+    }
+    lines.push(``, `Why this niche pays at this rate:`, `  ${n.why}`, ``, `Note: Country multiplier applied is ${c.multiplier.toFixed(2)}x (US baseline = 1.00x).`, ``, `🔗 Full calculator with charts: https://tiktapdown.com/rpm-calculator`);
+    return { content: [{ type: "text", text: lines.join("\n") }] };
+  }
+);
+
+// ============================================================
+//  TOOL 7: Calculate TikTok Engagement Rate
+// ============================================================
+
+server.tool(
+  "calculate_tiktok_engagement_rate",
+  "Calculate a TikTok video or account engagement rate and benchmark it against tier averages. Inputs are raw counts; output includes ER percentage, tier classification, and improvement tips.",
+  {
+    views: z.number().int().nonnegative().describe("Total views"),
+    likes: z.number().int().nonnegative().describe("Total likes"),
+    comments: z.number().int().nonnegative().describe("Total comments"),
+    shares: z.number().int().nonnegative().describe("Total shares"),
+    saves: z.number().int().nonnegative().optional().describe("Optional: saves (TikTok counts these as bookmarks)"),
+  },
+  async ({ views, likes, comments, shares, saves }) => {
+    if (views === 0) return { content: [{ type: "text", text: "❌ Views must be greater than 0." }] };
+    const totalEngagement = likes + comments + shares + (saves ?? 0);
+    const er = (totalEngagement / views) * 100;
+    const tier =
+      er < 3 ? { label: "Below Average", note: "Most TikTok videos sit in this range. Focus on hook quality and the first 3 seconds." } :
+      er < 6 ? { label: "Average", note: "Solid baseline. To break out, work on watch-through rate and CTAs." } :
+      er < 9 ? { label: "Good", note: "Above the platform average. Algorithm is favoring you. Lean into the format that worked." } :
+      er < 12 ? { label: "Great", note: "Top quartile performance. This kind of video usually triggers FYP distribution." } :
+                { label: "Exceptional", note: "Top 5 percent. Document everything you did right and replicate." };
+    const lines = [
+      `📊 TikTok Engagement Rate`,
+      ``,
+      `Views: ${views.toLocaleString()}`,
+      `Likes: ${likes.toLocaleString()}`,
+      `Comments: ${comments.toLocaleString()}`,
+      `Shares: ${shares.toLocaleString()}`,
+      saves !== undefined ? `Saves: ${saves.toLocaleString()}` : null,
+      ``,
+      `Engagement rate: ${er.toFixed(2)}%`,
+      `Tier: ${tier.label}`,
+      ``,
+      `What this means: ${tier.note}`,
+      ``,
+      `Formula: (likes + comments + shares${saves !== undefined ? " + saves" : ""}) / views × 100`,
+      ``,
+      `🔗 Full calculator with niche benchmarks: https://tiktapdown.com/engagement-calculator`,
+    ].filter(Boolean).join("\n");
+    return { content: [{ type: "text", text: lines }] };
+  }
+);
+
+// ============================================================
+//  TOOL 8: Convert Text to TikTok Unicode Font
+// ============================================================
+
+server.tool(
+  "convert_tiktok_unicode_font",
+  "Convert plain text to Unicode font styles for TikTok bios, captions, and on-screen text. Supports bold, italic, boldItalic, cursive, monospace, doubleStruck, and fraktur.",
+  {
+    text: z.string().min(1).max(280).describe("Text to convert (max 280 characters, like a tweet)"),
+    style: z.enum(["bold","italic","boldItalic","cursive","monospace","doubleStruck","fraktur"]).describe("Font style to apply"),
+  },
+  async ({ text, style }) => {
+    const converted = convertFont(text, style);
+    const result = [
+      `🅰️ TikTok Unicode Font — ${style}`,
+      ``,
+      `Original: ${text}`,
+      `Converted: ${converted}`,
+      ``,
+      `Copy-paste ready: ${converted}`,
+      ``,
+      `Tip: Unicode fonts work in TikTok bios, captions, and comment text. They render natively without needing a special keyboard or app.`,
+      ``,
+      `🔗 Browse all font styles: https://tiktapdown.com/tiktok-font-generator`,
+    ].join("\n");
+    return { content: [{ type: "text", text: result }] };
+  }
+);
+
+// ============================================================
+//  TOOL 9: Get TikTok Trends by Country (live)
+// ============================================================
+
+server.tool(
+  "get_tiktok_trends_by_country",
+  "Get the current trending TikTok music, hashtags, and videos for a specific country. Returns a snapshot of what is climbing right now. Data is refreshed daily.",
+  {
+    country: z.enum(["US","GB","AU","CA","TR","DE","FR","BR","MX","JP","SA","AE","IN","ID","ES","IT"]).describe("Country code"),
+  },
+  async ({ country }) => {
+    try {
+      const res = await fetch(`https://tiktapdown.com/api/trends/${country}`, {
+        headers: { "User-Agent": "tiktapdown-mcp/1.2" },
+      });
+      if (res.ok) {
+        const data = await res.json() as { music?: { title: string; author: string }[]; hashtags?: { name: string; volume?: string }[]; videos?: { title: string; author: string; url: string }[] } | undefined;
+        if (data) {
+          const blocks: string[] = [`📈 TikTok Trends — ${country} (live snapshot)`, ``];
+          if (Array.isArray(data.music) && data.music.length > 0) {
+            blocks.push(`🎵 Trending Music:`, ...data.music.slice(0, 10).map((m, i) => `  ${i + 1}. ${m.title} — ${m.author}`), ``);
+          }
+          if (Array.isArray(data.hashtags) && data.hashtags.length > 0) {
+            blocks.push(`#️⃣ Trending Hashtags:`, ...data.hashtags.slice(0, 10).map((h, i) => `  ${i + 1}. #${h.name}${h.volume ? ` (${h.volume})` : ""}`), ``);
+          }
+          if (Array.isArray(data.videos) && data.videos.length > 0) {
+            blocks.push(`🎬 Trending Videos:`, ...data.videos.slice(0, 5).map((v, i) => `  ${i + 1}. ${v.title} — @${v.author}`), ``);
+          }
+          blocks.push(`🔗 Live trends page: https://tiktapdown.com/trends/${country}`);
+          return { content: [{ type: "text", text: blocks.join("\n") }] };
+        }
+      }
+    } catch {
+      // fall through to fallback
+    }
+    return {
+      content: [{
+        type: "text",
+        text: [
+          `📈 TikTok Trends — ${country}`,
+          ``,
+          `Live trends data is best viewed on the dashboard, which refreshes daily with the climbing music, hashtags, and videos for ${country}:`,
+          ``,
+          `🔗 https://tiktapdown.com/trends/${country}`,
+          ``,
+          `Tip: For sound discovery, focus on items in positions 20–50 with a steep climb arrow — those are the ones that have not saturated yet.`,
+        ].join("\n"),
+      }],
+    };
+  }
+);
+
+// ============================================================
+//  TOOL 10: TikTok Keyword Research (search intent + volume directional)
+// ============================================================
+
+server.tool(
+  "get_tiktok_keyword_research",
+  "Get TikTok-specific keyword research data: search intent type, suggested related keywords, and content angle ideas. Useful for planning a TikTok content calendar.",
+  {
+    keyword: z.string().min(2).max(80).describe("Seed keyword to research (e.g. 'meal prep', 'productivity hacks', 'iPhone tips')"),
+  },
+  async ({ keyword }) => {
+    const k = keyword.trim().toLowerCase();
+    // Heuristic intent classification
+    const howToSignals = ["how", "how to", "tutorial", "guide", "tips", "hacks", "steps"];
+    const reviewSignals = ["best", "review", "vs", "comparison", "worth it"];
+    const trendSignals = ["trend", "trending", "viral", "2026", "this week"];
+    const lifestyleSignals = ["routine", "day in the life", "what i eat", "grwm", "morning"];
+
+    let intent = "Educational / How-to";
+    if (howToSignals.some(s => k.includes(s))) intent = "Educational / How-to";
+    else if (reviewSignals.some(s => k.includes(s))) intent = "Review / Comparison";
+    else if (trendSignals.some(s => k.includes(s))) intent = "Trend / Hype";
+    else if (lifestyleSignals.some(s => k.includes(s))) intent = "Lifestyle / Routine";
+
+    const angles = [
+      `"${keyword} mistakes nobody talks about"`,
+      `"I tested ${keyword} for 30 days — here is what happened"`,
+      `"${keyword} vs the alternative everyone is missing"`,
+      `"3 things I wish I knew before ${keyword}"`,
+      `"Stop doing ${keyword} like this in 2026"`,
+    ];
+
+    const related = [
+      `${keyword} for beginners`,
+      `${keyword} tutorial`,
+      `${keyword} tips and tricks`,
+      `best ${keyword}`,
+      `${keyword} 2026`,
+      `${keyword} routine`,
+      `${keyword} vs`,
+      `${keyword} review`,
+    ];
+
+    const result = [
+      `🔍 TikTok Keyword Research — "${keyword}"`,
+      ``,
+      `Search intent: ${intent}`,
+      ``,
+      `Related keywords to target:`,
+      ...related.map(r => `  • ${r}`),
+      ``,
+      `Content angles that perform on TikTok for this seed:`,
+      ...angles.map(a => `  • ${a}`),
+      ``,
+      `Note: For exact search volume and competition data, use the in-browser tool which queries DataForSEO.`,
+      ``,
+      `🔗 Live keyword research: https://tiktapdown.com/keywords`,
+    ].join("\n");
+    return { content: [{ type: "text", text: result }] };
+  }
+);
+
+// ============================================================
 //  START — stdio (local) or HTTP (Railway/remote)
 // ============================================================
 

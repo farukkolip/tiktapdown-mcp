@@ -23,12 +23,20 @@ No browser, no copy-paste, no third-party watermarks.
 
 ## Tools
 
+10 tools covering downloading, sound discovery, monetization analysis, and content planning.
+
 | Tool | What it does |
 |---|---|
-| `download_tiktok_video` | Download any TikTok video. Returns no-watermark + watermark MP4 links. |
+| `download_tiktok_video` | Download any TikTok video. Returns no-watermark + watermark MP4 links and full metadata. |
+| `extract_tiktok_audio_mp3` | Extract audio (MP3) from a TikTok video for sound discovery and trend research. |
 | `get_tiktok_hashtags` | Top 15 hashtags for 15 niches with strategy tips per niche. |
 | `get_best_time_to_post` | Best posting windows for 12 countries with reasoning. |
 | `generate_tiktok_hook` | 8 hook categories × 3 formulas with concrete examples. |
+| `calculate_tiktok_rpm` | Estimate Creator Rewards revenue per niche × country × views. 16 niches, 16 countries. |
+| `calculate_tiktok_engagement_rate` | Compute engagement rate from views/likes/comments/shares and benchmark against tiers. |
+| `convert_tiktok_unicode_font` | Convert text to 7 Unicode font styles (bold, italic, cursive, monospace, double-struck, fraktur) for bios and captions. |
+| `get_tiktok_trends_by_country` | Live snapshot of trending music, hashtags, and videos for 16 countries. |
+| `get_tiktok_keyword_research` | TikTok-specific keyword intent classification with related keywords and content angles. |
 
 ## Quick Install — Claude Desktop
 
