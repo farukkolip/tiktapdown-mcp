@@ -280,9 +280,13 @@ const HOOKS = {
 // ============================================================
 //  SERVER SETUP
 // ============================================================
+const VERSION = "1.2.0";
+const SITE = "https://tiktapdown.com";
+// Mirrors src/lib/countries.ts on tiktapdown-web — keep in sync (contract test checks it).
+const TRENDS_COUNTRIES = ["US", "GB", "AU", "CA", "DE", "FR", "JP", "SA", "AE", "BR", "MX", "TR", "ES", "IT", "NL", "SE"];
 const server = new mcp_js_1.McpServer({
     name: "tiktapdown",
-    version: "1.0.0",
+    version: VERSION,
 });
 // ============================================================
 //  TOOL 1: Download TikTok Video
@@ -646,28 +650,34 @@ server.tool("convert_tiktok_unicode_font", "Convert plain text to Unicode font s
 //  TOOL 9: Get TikTok Trends by Country (live)
 // ============================================================
 server.tool("get_tiktok_trends_by_country", "Get the current trending TikTok music, hashtags, and videos for a specific country. Returns a snapshot of what is climbing right now. Data is refreshed daily.", {
-    country: zod_1.z.enum(["US", "GB", "AU", "CA", "TR", "DE", "FR", "BR", "MX", "JP", "SA", "AE", "IN", "ID", "ES", "IT"]).describe("Country code"),
+    country: zod_1.z.enum(TRENDS_COUNTRIES).describe("Country code"),
 }, async ({ country }) => {
     try {
-        const res = await fetch(`https://tiktapdown.com/api/trends/${country}`, {
-            headers: { "User-Agent": "tiktapdown-mcp/1.2" },
-        });
-        if (res.ok) {
-            const data = await res.json();
-            if (data) {
-                const blocks = [`📈 TikTok Trends — ${country} (live snapshot)`, ``];
-                if (Array.isArray(data.music) && data.music.length > 0) {
-                    blocks.push(`🎵 Trending Music:`, ...data.music.slice(0, 10).map((m, i) => `  ${i + 1}. ${m.title} — ${m.author}`), ``);
-                }
-                if (Array.isArray(data.hashtags) && data.hashtags.length > 0) {
-                    blocks.push(`#️⃣ Trending Hashtags:`, ...data.hashtags.slice(0, 10).map((h, i) => `  ${i + 1}. #${h.name}${h.volume ? ` (${h.volume})` : ""}`), ``);
-                }
-                if (Array.isArray(data.videos) && data.videos.length > 0) {
-                    blocks.push(`🎬 Trending Videos:`, ...data.videos.slice(0, 5).map((v, i) => `  ${i + 1}. ${v.title} — @${v.author}`), ``);
-                }
-                blocks.push(`🔗 Live trends page: https://tiktapdown.com/trends/${country}`);
-                return { content: [{ type: "text", text: blocks.join("\n") }] };
+        // Site API: /api/trends?country=XX&category=videos|hashtags|songs (one category per call).
+        const get = async (category) => {
+            const res = await fetch(`${SITE}/api/trends?country=${country}&category=${category}`, {
+                headers: { "User-Agent": `tiktapdown-mcp/${VERSION}` },
+            });
+            if (!res.ok)
+                throw new Error(`trends ${category} ${res.status}`);
+            const json = await res.json();
+            return Array.isArray(json) ? json : [];
+        };
+        const [videos, hashtags, songs] = await Promise.all([get("videos"), get("hashtags"), get("songs")]);
+        if (videos.length > 0 || hashtags.length > 0) {
+            const blocks = [`📈 TikTok Trends — ${country} (refreshed daily)`, ``];
+            if (videos.length > 0) {
+                blocks.push(`🎬 Trending Videos:`, ...videos.slice(0, 5).map((v, i) => `  ${i + 1}. ${(v.title || "Untitled").slice(0, 80)} — @${v.author_name ?? "?"} (${Number(v.play_count ?? 0).toLocaleString()} views)
+     ${v.web_video_url ?? ""}`), ``);
             }
+            if (hashtags.length > 0) {
+                blocks.push(`#️⃣ Trending Hashtags:`, ...hashtags.slice(0, 10).map((h, i) => `  ${i + 1}. #${h.hashtag_name}${h.video_views ? ` (${Number(h.video_views).toLocaleString()} views)` : ""}`), ``);
+            }
+            if (songs.length > 0) {
+                blocks.push(`🎵 Popular Music:`, ...songs.slice(0, 10).map((m, i) => `  ${i + 1}. ${m.music_name} — ${m.author ?? ""}`), ``);
+            }
+            blocks.push(`🔗 Live trends page: ${SITE}/trends/${country}`);
+            return { content: [{ type: "text", text: blocks.join("\n") }] };
         }
     }
     catch {
@@ -683,7 +693,7 @@ server.tool("get_tiktok_trends_by_country", "Get the current trending TikTok mus
                     ``,
                     `🔗 https://tiktapdown.com/trends/${country}`,
                     ``,
-                    `Tip: For sound discovery, focus on items in positions 20–50 with a steep climb arrow — those are the ones that have not saturated yet.`,
+                    `(The trends API did not return data for ${country} right now — the page above is the live source.)`,
                 ].join("\n"),
             }],
     };
@@ -764,7 +774,7 @@ if (isHttp) {
         await transport.handleRequest(req, res);
     });
     app.get("/", (_req, res) => {
-        res.json({ name: "tiktapdown-mcp", version: "1.0.0", status: "ok" });
+        res.json({ name: "tiktapdown-mcp", version: VERSION, status: "ok" });
     });
     const port = Number(process.env.PORT) || 3000;
     app.listen(port, () => {

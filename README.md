@@ -35,7 +35,7 @@ No browser, no copy-paste, no third-party watermarks.
 | `calculate_tiktok_rpm` | Estimate Creator Rewards revenue per niche × country × views. 16 niches, 16 countries. |
 | `calculate_tiktok_engagement_rate` | Compute engagement rate from views/likes/comments/shares and benchmark against tiers. |
 | `convert_tiktok_unicode_font` | Convert text to 7 Unicode font styles (bold, italic, cursive, monospace, double-struck, fraktur) for bios and captions. |
-| `get_tiktok_trends_by_country` | Live snapshot of trending music, hashtags, and videos for 16 countries. |
+| `get_tiktok_trends_by_country` | Today's trending videos, hashtags and music for 16 countries (US, GB, AU, CA, DE, FR, JP, SA, AE, BR, MX, TR, ES, IT, NL, SE). Refreshed daily. |
 | `get_tiktok_keyword_research` | TikTok-specific keyword intent classification with related keywords and content angles. |
 
 ## Quick Install — Claude Desktop

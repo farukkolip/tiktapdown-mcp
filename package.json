@@ -1,8 +1,8 @@
 {
   "name": "tiktapdown-mcp",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "mcpName": "io.github.farukkolip/tiktapdown-mcp",
-  "description": "TikTapDown MCP Server — 10 TikTok creator tools: download videos and audio, hashtags, hooks, RPM and engagement calculators, Unicode fonts, trends, keyword research. Part of the Tapdown family.",
+  "description": "TikTapDown MCP Server \u2014 10 TikTok creator tools: download videos and audio, hashtags, hooks, RPM and engagement calculators, Unicode fonts, trends, keyword research. Part of the Tapdown family.",
   "main": "dist/index.js",
   "bin": {
     "tiktapdown-mcp": "dist/index.js"
@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts"
+    "dev": "ts-node src/index.ts",
+    "test:contract": "node scripts/contract-test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.10.2",
